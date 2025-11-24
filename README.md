@@ -69,7 +69,7 @@ Key components:
 - **Tempo**: 120 BPM
 - **Melody**: 16-note C-major scale
 - **Architecture**: Fully synthesizable Verilog
-- **Target**: GF180MCU ASIC (1x2 tiles)
+- **Target**: GF180MCU ASIC (1x1 tiles)
 
 ## Testing
 
@@ -100,40 +100,3 @@ The design has been optimized for ASIC implementation:
 - ✅ Pure behavioral Verilog (no vendor primitives)
 - ✅ Single clock domain
 - ✅ Fully synthesizable for GF180MCU
-
-## Author
-
-**Rakesh Peter**
-
-## License
-
-Apache-2.0
-
-## Acknowledgments
-
-Based on the iCEstick-hacks FM transmitter project, adapted for TinyTapeout and GF180MCU ASIC implementation.
-
----
-
-## What is Tiny Tapeout?
-
-Tiny Tapeout is an educational project that aims to make it easier and cheaper than ever to get your digital and analog designs manufactured on a real chip.
-
-To learn more and get started, visit https://tinytapeout.com.
-
-## Resources
-
-- [FAQ](https://tinytapeout.com/faq/)
-- [Digital design lessons](https://tinytapeout.com/digital_design/)
-- [Learn how semiconductors work](https://tinytapeout.com/siliwiz/)
-- [Join the community](https://tinytapeout.com/discord)
-- [Build your design locally](https://www.tinytapeout.com/guides/local-hardening/)
-
-## What next?
-
-- [Submit your design to the next shuttle](https://app.tinytapeout.com/)
-- Share your project on social media:
-  - LinkedIn [#tinytapeout](https://www.linkedin.com/search/results/content/?keywords=%23tinytapeout) [@TinyTapeout](https://www.linkedin.com/company/100708654/)
-  - Mastodon [#tinytapeout](https://chaos.social/tags/tinytapeout) [@matthewvenn](https://chaos.social/@matthewvenn)
-  - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@tinytapeout](https://twitter.com/tinytapeout)
-  - Bluesky [@tinytapeout.com](https://bsky.app/profile/tinytapeout.com)
