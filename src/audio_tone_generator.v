@@ -72,39 +72,21 @@ module audio_tone_generator #(
     // Pre-calculated multipliers for semitone offsets
     // Multiplier = 2^(semitone/12) * 65536 (fixed-point 16.16)
     //
-    // This avoids runtime exponential calculation
+    // Simplified to only include C4-C5 range (-9 to +3) to reduce area
 
     function [31:0] semitone_multiplier;
         input signed [7:0] semitone;
         begin
-            // Lookup table for semitone multipliers (×65536 fixed point)
-            // Only cover the range we need for Für Elise (-9 to +12)
+            // Reduced lookup table for C-major scale only
             case (semitone)
-                -8'd12: semitone_multiplier = 32768;   // 0.5×
-                -8'd11: semitone_multiplier = 34716;   // 2^(-11/12)
-                -8'd10: semitone_multiplier = 36781;   // 2^(-10/12)
-                -8'd9:  semitone_multiplier = 38968;   // C4: 2^(-9/12) = 0.5946
-                -8'd8:  semitone_multiplier = 41285;   // C#4
+                -8'd9:  semitone_multiplier = 38968;   // C4
                 -8'd7:  semitone_multiplier = 43740;   // D4
-                -8'd6:  semitone_multiplier = 46341;   // D#4
                 -8'd5:  semitone_multiplier = 49097;   // E4
                 -8'd4:  semitone_multiplier = 52016;   // F4
-                -8'd3:  semitone_multiplier = 55109;   // F#4
                 -8'd2:  semitone_multiplier = 58386;   // G4
-                -8'd1:  semitone_multiplier = 61858;   // G#4
-                8'd0:   semitone_multiplier = 65536;   // A4: 1.0×
-                8'd1:   semitone_multiplier = 69433;   // A#4
+                8'd0:   semitone_multiplier = 65536;   // A4
                 8'd2:   semitone_multiplier = 73562;   // B4
                 8'd3:   semitone_multiplier = 77936;   // C5
-                8'd4:   semitone_multiplier = 82570;   // C#5
-                8'd5:   semitone_multiplier = 87480;   // D5
-                8'd6:   semitone_multiplier = 92682;   // D#5
-                8'd7:   semitone_multiplier = 98193;   // E5
-                8'd8:   semitone_multiplier = 104032;  // F5
-                8'd9:   semitone_multiplier = 110218;  // F#5
-                8'd10:  semitone_multiplier = 116772;  // G5
-                8'd11:  semitone_multiplier = 123715;  // G#5
-                8'd12:  semitone_multiplier = 131072;  // A5: 2.0×
                 default: semitone_multiplier = 65536;  // Default to A4
             endcase
         end
