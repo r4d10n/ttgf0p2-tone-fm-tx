@@ -9,14 +9,15 @@
 // Module: tt_um_tone_fm_tx
 //
 // Description:
-//   TinyTapeout wrapper for audio tone generator and FM transmitter.
-//   Plays musical melodies via FM modulation with DDS.
+//   TinyTapeout wrapper for simplified FM transmitter.
+//   Plays a simple C-major scale pattern via FM modulation.
+//   Simplified design to reduce area utilization for ASIC build.
 //
 // Pin Mapping:
 //   ui_in[0]   = enable      - Enable playback
 //   ui_in[1]   = loop        - Loop melody continuously
-//   ui_in[2]   = clk_2x_en   - Enable clock doubling
-//   ui_in[3]   = pwm_in      - External PWM audio input
+//   ui_in[2]   = reserved    - (clk_2x removed)
+//   ui_in[3]   = reserved    - (pwm_in removed)
 //   ui_in[7:4] = reserved
 //
 //   uo_out[0]  = fm_out      - FM modulated RF output
@@ -45,8 +46,7 @@ module tt_um_tone_fm_tx (
     //=========================================================================
     wire enable      = ui_in[0] & ena;
     wire loop        = ui_in[1];
-    wire clk_2x_en   = ui_in[2];
-    wire pwm_in      = ui_in[3];
+    // ui_in[2] and ui_in[3] reserved (clk_2x and pwm_in removed)
 
     //=========================================================================
     // Internal Signals
@@ -56,23 +56,23 @@ module tt_um_tone_fm_tx (
     wire [31:0] phase_inc_out;
     wire        playing;
     wire        melody_end;
-    wire [6:0]  note_index;
+    wire [4:0]  note_index;
 
     //=========================================================================
-    // FM Transmitter Core
+    // FM Transmitter Core (Simplified)
     //=========================================================================
     fur_elise_fm_top #(
         .CLK_FREQ_HZ(50_000_000),           // TinyTapeout clock is ~50 MHz
         .CLOCKS_PER_16TH(50_000_000 / 8),   // 120 BPM
-        .MELODY_LENGTH(82),
+        .MELODY_LENGTH(16),                 // Reduced from 82 to 16 notes
         .PWM_FREQ_HZ(50_000)
     ) u_fur_elise (
         .clk           (clk),
         .rst_n         (rst_n),
         .enable        (enable),
         .loop          (loop),
-        .clk_2x_enable (clk_2x_en),
-        .pwm_in        (pwm_in),
+        .clk_2x_enable (1'b0),              // Disabled
+        .pwm_in        (1'b0),              // Disabled
         .fm_out        (fm_out),
         .audio_out     (audio_out),
         .phase_inc_out (phase_inc_out),
@@ -95,6 +95,6 @@ module tt_um_tone_fm_tx (
     assign uio_oe  = 8'hFF;  // All outputs
 
     // Suppress unused input warnings
-    wire _unused = &{uio_in, note_index[6:4], 1'b0};
+    wire _unused = &{uio_in, ui_in[7:2], 1'b0};
 
 endmodule
