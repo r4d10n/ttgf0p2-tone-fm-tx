@@ -2,22 +2,24 @@
 // Module: fur_elise_fm_top
 //
 // Description:
-//   Simplified FM transmitter with musical tone generation.
+//   FM transmitter with musical tone generation and optional PWM input.
 //   Plays a simple C-major scale pattern via FM modulation.
+//   Includes optional clock doubling and PWM audio input capability.
 //
 // Features:
 //   - Plays built-in C-major scale melody via FM
+//   - Accepts external PWM audio input for FM transmission
+//   - Optional clock doubling (XOR-based) for higher FM carrier frequency
 //   - Audio frequency output for direct speaker connection
 //   - Phase increment output for debugging/monitoring
-//   - Simplified design for reduced ASIC area
 //
 // Ports:
 //   clk           - Input clock (~50 MHz expected)
 //   rst_n         - Active-low reset
 //   enable        - Enable playback
 //   loop          - Loop melody continuously
-//   clk_2x_enable - Reserved (no longer used)
-//   pwm_in        - Reserved (no longer used)
+//   clk_2x_enable - Enable clock doubling
+//   pwm_in        - External PWM audio input
 //   fm_out        - FM modulated RF output
 //   audio_out     - Audio frequency output (speaker)
 //   phase_inc_out - Current phase increment (32-bit, for debugging)
@@ -101,9 +103,40 @@ module fur_elise_fm_top #(
 );
 
     //=========================================================================
-    // Simplified Design - Clock doubler and PWM decoder removed
+    // Clock Doubling
     //=========================================================================
-    // These features have been removed to reduce area utilization
+
+    wire clk_fast;  // Potentially doubled clock
+
+    clock_doubler #(
+        .DELAY_STAGES(8)
+    ) u_clk_doubler (
+        .clk_in  (clk),
+        .enable  (clk_2x_enable),
+        .clk_out (clk_fast)
+    );
+
+    //=========================================================================
+    // PWM Input Decoder
+    //=========================================================================
+
+    wire signed [15:0] pwm_sample;
+    wire pwm_sample_valid;
+    wire [15:0] pwm_debug;
+
+    pwm_input_decoder #(
+        .CLK_FREQ_HZ(CLK_FREQ_HZ),
+        .PWM_FREQ_HZ(PWM_FREQ_HZ),
+        .SAMPLE_BITS(16)
+    ) u_pwm_decoder (
+        .clk         (clk),
+        .rst_n       (rst_n),
+        .enable      (enable),
+        .pwm_in      (pwm_in),
+        .sample_out  (pwm_sample),
+        .sample_valid(pwm_sample_valid),
+        .debug_count (pwm_debug)
+    );
 
     //=========================================================================
     // Melody ROM and Sequencer
@@ -162,11 +195,63 @@ module fur_elise_fm_top #(
         .is_rest         (melody_is_rest)
     );
 
-    // Output phase increment for debugging/monitoring
-    assign phase_inc_out = melody_phase_increment;
+    //=========================================================================
+    // PWM to Phase Increment Conversion
+    //=========================================================================
+    // Convert PWM sample to FM deviation
+    // phase_increment = BASE_PHASE_INCREMENT + (pwm_sample * PWM_DEVIATION_SCALE)
+
+    reg [31:0] pwm_phase_increment;
+    reg pwm_active;
+
+    // Detect if PWM input is active (has valid samples)
+    reg [7:0] pwm_timeout_counter;
+    localparam PWM_TIMEOUT = 255;
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            pwm_timeout_counter <= 0;
+            pwm_active <= 1'b0;
+        end else begin
+            if (pwm_sample_valid) begin
+                pwm_timeout_counter <= PWM_TIMEOUT;
+                pwm_active <= 1'b1;
+            end else if (pwm_timeout_counter > 0) begin
+                pwm_timeout_counter <= pwm_timeout_counter - 1;
+            end else begin
+                pwm_active <= 1'b0;
+            end
+        end
+    end
+
+    // Calculate PWM-based phase increment
+    wire signed [47:0] pwm_deviation;
+    assign pwm_deviation = $signed(pwm_sample) * $signed({1'b0, PWM_DEVIATION_SCALE});
+
+    wire [31:0] pwm_phase_calc;
+    assign pwm_phase_calc = BASE_PHASE_INCREMENT + pwm_deviation[47:16];
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            pwm_phase_increment <= BASE_PHASE_INCREMENT;
+        end else if (pwm_sample_valid) begin
+            pwm_phase_increment <= pwm_phase_calc;
+        end
+    end
 
     //=========================================================================
-    // FM Modulator
+    // Phase Increment Selection
+    //=========================================================================
+    // Use PWM input when active, otherwise use melody
+
+    wire [31:0] selected_phase_increment;
+    assign selected_phase_increment = pwm_active ? pwm_phase_increment : melody_phase_increment;
+
+    // Output phase increment for debugging/monitoring
+    assign phase_inc_out = selected_phase_increment;
+
+    //=========================================================================
+    // FM Modulator (using fast clock when enabled)
     //=========================================================================
 
     wire fm_raw_out;
@@ -174,10 +259,10 @@ module fur_elise_fm_top #(
     fm_modulator #(
         .ACCUMULATOR_WIDTH(32)
     ) u_fm_mod (
-        .clk             (clk),
+        .clk             (clk_fast),          // Use doubled clock when enabled
         .rst_n           (rst_n),
-        .enable          (enable & pitch_valid),
-        .phase_increment (melody_phase_increment),
+        .enable          (enable & (pitch_valid | pwm_active)),
+        .phase_increment (selected_phase_increment),
         .fm_out          (fm_raw_out),
         .phase_out       ()
     );

@@ -1,27 +1,134 @@
 ![](../../workflows/gds/badge.svg) ![](../../workflows/docs/badge.svg) ![](../../workflows/test/badge.svg) ![](../../workflows/fpga/badge.svg)
 
-# Tiny Tapeout Verilog Project Template
+# Audio Tone Generator & FM Transmitter
 
-- [Read the documentation for project](docs/info.md)
+A TinyTapeout FM transmitter project featuring musical tone generation using Direct Digital Synthesis (DDS). This design plays a C-major scale pattern and supports optional external PWM audio input for FM transmission.
+
+- [Read the full documentation](docs/info.md)
+
+## Features
+
+- 🎵 **Musical Tone Generation**: Plays a 16-note C-major scale pattern
+- 📻 **FM Modulation**: Generates FM-modulated RF output signal
+- 🎤 **PWM Audio Input**: Accepts external PWM audio for FM transmission
+- ⚡ **Clock Doubling**: Optional 2x clock multiplication for higher carrier frequencies
+- 🔊 **Audio Output**: Direct audio-frequency square wave output
+- 🔁 **Loop Mode**: Continuous melody playback
+- 📊 **Debug Outputs**: Status monitoring and control signals
+
+## How It Works
+
+The design uses Direct Digital Synthesis (DDS) with a 32-bit phase accumulator to generate precise frequencies for both audio tones and FM carrier signals. A melody ROM stores a 16-note C-major scale which is sequenced and converted to FM-modulated RF output at ~12.5 MHz (or ~25 MHz with clock doubling).
+
+Key components:
+- **Melody ROM**: 16-note C-major scale pattern
+- **DDS Engine**: 32-bit phase accumulator for frequency synthesis
+- **FM Modulator**: Modulates carrier with audio tones
+- **PWM Decoder**: Converts external PWM to digital audio samples
+- **Clock Doubler**: XOR-based clock frequency multiplication
+
+### Block Diagram
+
+```
+┌─────────────┐     ┌──────────────┐     ┌─────────────┐
+│   Melody    │────▶│  Frequency   │────▶│     FM      │────▶ fm_out
+│    ROM      │     │  Calculator  │     │  Modulator  │
+└─────────────┘     └──────────────┘     └─────────────┘
+                                               ▲
+                                               │
+┌─────────────┐     ┌──────────────┐          │
+│  PWM Input  │────▶│     PWM      │──────────┘
+│             │     │   Decoder    │
+└─────────────┘     └──────────────┘
+
+┌─────────────┐     ┌──────────────┐
+│   Clock     │────▶│    Clock     │
+│   Input     │     │   Doubler    │
+└─────────────┘     └──────────────┘
+```
+
+## Quick Start
+
+### Basic Usage
+
+1. Set `enable` (ui[0]) high to start playback
+2. Set `loop` (ui[1]) high for continuous playback
+3. Monitor `fm_out` (uo[0]) for FM signal
+4. Monitor `audio_out` (uo[1]) with speaker/oscilloscope
+
+### Pin Mapping
+
+| Pin | Name | Description |
+|-----|------|-------------|
+| ui[0] | enable | Enable playback |
+| ui[1] | loop | Loop melody continuously |
+| ui[2] | clk_2x_enable | Enable clock doubling |
+| ui[3] | pwm_in | External PWM audio input |
+| uo[0] | fm_out | FM modulated RF output |
+| uo[1] | audio_out | Audio frequency output |
+| uo[2] | playing | Melody playing status |
+| uo[3] | melody_end | End of melody pulse |
+
+## Technical Specifications
+
+- **Clock Frequency**: 50 MHz
+- **FM Carrier**: ~12.5 MHz (25 MHz with clock doubling)
+- **Tempo**: 120 BPM
+- **Melody**: 16-note C-major scale
+- **PWM Input**: 50 kHz expected
+- **Architecture**: Fully synthesizable Verilog
+- **Target**: GF180MCU ASIC
+
+## Testing
+
+The project includes cocotb-based testbenches:
+
+```bash
+cd test
+make
+```
+
+Tests verify:
+- Melody playback enable/disable
+- Loop mode functionality
+- Status signal generation
+- Basic FM modulator operation
+
+## External Hardware (Optional)
+
+1. **FM Receiver**: Tune to ~12.5 MHz to receive FM signal
+2. **Speaker/Buzzer**: Connect to `audio_out` for direct audio
+3. **PWM Source**: Microcontroller with PWM output for external audio
+4. **Oscilloscope**: For signal monitoring and debugging
+
+## Design Optimizations
+
+The design has been optimized for ASIC implementation:
+- ✅ Simplified 16-note melody (vs. 82-note Für Elise)
+- ✅ Reduced lookup tables for area efficiency
+- ✅ Pure behavioral Verilog (no vendor primitives)
+- ✅ Single clock domain
+- ✅ Fully synthesizable for GF180MCU
+
+## Author
+
+**Rakesh Peter**
+
+## License
+
+Apache-2.0
+
+## Acknowledgments
+
+Based on the iCEstick-hacks FM transmitter project, adapted for TinyTapeout and GF180MCU ASIC implementation.
+
+---
 
 ## What is Tiny Tapeout?
 
 Tiny Tapeout is an educational project that aims to make it easier and cheaper than ever to get your digital and analog designs manufactured on a real chip.
 
 To learn more and get started, visit https://tinytapeout.com.
-
-## Set up your Verilog project
-
-1. Add your Verilog files to the `src` folder.
-2. Edit the [info.yaml](info.yaml) and update information about your project, paying special attention to the `source_files` and `top_module` properties. If you are upgrading an existing Tiny Tapeout project, check out our [online info.yaml migration tool](https://tinytapeout.github.io/tt-yaml-upgrade-tool/).
-3. Edit [docs/info.md](docs/info.md) and add a description of your project.
-4. Adapt the testbench to your design. See [test/README.md](test/README.md) for more information.
-
-The GitHub action will automatically build the ASIC files using [LibreLane](https://www.zerotoasiccourse.com/terminology/librelane/).
-
-## Enable GitHub actions to build the results page
-
-- [Enabling GitHub Pages](https://tinytapeout.com/faq/#my-github-action-is-failing-on-the-pages-part)
 
 ## Resources
 
@@ -33,9 +140,8 @@ The GitHub action will automatically build the ASIC files using [LibreLane](http
 
 ## What next?
 
-- [Submit your design to the next shuttle](https://app.tinytapeout.com/).
-- Edit [this README](README.md) and explain your design, how it works, and how to test it.
-- Share your project on your social network of choice:
+- [Submit your design to the next shuttle](https://app.tinytapeout.com/)
+- Share your project on social media:
   - LinkedIn [#tinytapeout](https://www.linkedin.com/search/results/content/?keywords=%23tinytapeout) [@TinyTapeout](https://www.linkedin.com/company/100708654/)
   - Mastodon [#tinytapeout](https://chaos.social/tags/tinytapeout) [@matthewvenn](https://chaos.social/@matthewvenn)
   - X (formerly Twitter) [#tinytapeout](https://twitter.com/hashtag/tinytapeout) [@tinytapeout](https://twitter.com/tinytapeout)
