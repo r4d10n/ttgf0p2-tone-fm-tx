@@ -2,30 +2,29 @@
 
 # Audio Tone Generator & FM Transmitter
 
-A TinyTapeout FM transmitter project featuring musical tone generation using Direct Digital Synthesis (DDS). This design plays a C-major scale pattern and supports optional external PWM audio input for FM transmission.
+A TinyTapeout FM transmitter project featuring musical tone generation using Direct Digital Synthesis (DDS). This design plays a C-major scale pattern via FM modulation.
 
 - [Read the full documentation](docs/info.md)
 
 ## Features
 
 - 🎵 **Musical Tone Generation**: Plays a 16-note C-major scale pattern
-- 📻 **FM Modulation**: Generates FM-modulated RF output signal
-- 🎤 **PWM Audio Input**: Accepts external PWM audio for FM transmission
-- ⚡ **Clock Doubling**: Optional 2x clock multiplication for higher carrier frequencies
+- 📻 **FM Modulation**: Generates FM-modulated RF output signal (~12.5 MHz)
 - 🔊 **Audio Output**: Direct audio-frequency square wave output
 - 🔁 **Loop Mode**: Continuous melody playback
 - 📊 **Debug Outputs**: Status monitoring and control signals
+- ⚡ **Optimized Design**: Simplified for efficient ASIC implementation
 
 ## How It Works
 
-The design uses Direct Digital Synthesis (DDS) with a 32-bit phase accumulator to generate precise frequencies for both audio tones and FM carrier signals. A melody ROM stores a 16-note C-major scale which is sequenced and converted to FM-modulated RF output at ~12.5 MHz (or ~25 MHz with clock doubling).
+The design uses Direct Digital Synthesis (DDS) with a 32-bit phase accumulator to generate precise frequencies for both audio tones and FM carrier signals. A melody ROM stores a 16-note C-major scale which is sequenced and converted to FM-modulated RF output at ~12.5 MHz.
 
 Key components:
 - **Melody ROM**: 16-note C-major scale pattern
 - **DDS Engine**: 32-bit phase accumulator for frequency synthesis
 - **FM Modulator**: Modulates carrier with audio tones
-- **PWM Decoder**: Converts external PWM to digital audio samples
-- **Clock Doubler**: XOR-based clock frequency multiplication
+- **Audio Generator**: Creates audio-frequency square wave output
+- **Sequencer**: Controls note timing and progression
 
 ### Block Diagram
 
@@ -34,17 +33,13 @@ Key components:
 │   Melody    │────▶│  Frequency   │────▶│     FM      │────▶ fm_out
 │    ROM      │     │  Calculator  │     │  Modulator  │
 └─────────────┘     └──────────────┘     └─────────────┘
-                                               ▲
-                                               │
-┌─────────────┐     ┌──────────────┐          │
-│  PWM Input  │────▶│     PWM      │──────────┘
-│             │     │   Decoder    │
-└─────────────┘     └──────────────┘
-
-┌─────────────┐     ┌──────────────┐
-│   Clock     │────▶│    Clock     │
-│   Input     │     │   Doubler    │
-└─────────────┘     └──────────────┘
+                           │
+                           │
+                           ▼
+                    ┌──────────────┐
+                    │    Audio     │────▶ audio_out
+                    │  Generator   │
+                    └──────────────┘
 ```
 
 ## Quick Start
@@ -62,8 +57,6 @@ Key components:
 |-----|------|-------------|
 | ui[0] | enable | Enable playback |
 | ui[1] | loop | Loop melody continuously |
-| ui[2] | clk_2x_enable | Enable clock doubling |
-| ui[3] | pwm_in | External PWM audio input |
 | uo[0] | fm_out | FM modulated RF output |
 | uo[1] | audio_out | Audio frequency output |
 | uo[2] | playing | Melody playing status |
@@ -72,12 +65,11 @@ Key components:
 ## Technical Specifications
 
 - **Clock Frequency**: 50 MHz
-- **FM Carrier**: ~12.5 MHz (25 MHz with clock doubling)
+- **FM Carrier**: ~12.5 MHz
 - **Tempo**: 120 BPM
 - **Melody**: 16-note C-major scale
-- **PWM Input**: 50 kHz expected
 - **Architecture**: Fully synthesizable Verilog
-- **Target**: GF180MCU ASIC
+- **Target**: GF180MCU ASIC (1x2 tiles)
 
 ## Testing
 
@@ -98,8 +90,7 @@ Tests verify:
 
 1. **FM Receiver**: Tune to ~12.5 MHz to receive FM signal
 2. **Speaker/Buzzer**: Connect to `audio_out` for direct audio
-3. **PWM Source**: Microcontroller with PWM output for external audio
-4. **Oscilloscope**: For signal monitoring and debugging
+3. **Oscilloscope**: For signal monitoring and debugging
 
 ## Design Optimizations
 
