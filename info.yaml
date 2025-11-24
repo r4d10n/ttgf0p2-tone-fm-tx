@@ -3,12 +3,12 @@ project:
   title:        "Audio Tone Generator & FM Transmitter"
   author:       "Rakesh Peter"
   discord:      ""
-  description:  "Simplified FM transmitter with C-major scale tone generation via DDS"
+  description:  "FM transmitter / Tone Generator"
   language:     "Verilog"
   clock_hz:     50000000  # 50 MHz
 
   # How many tiles your design occupies? A single tile is about 340x160 uM.
-  tiles: "1x2"
+  tiles: "1x1"
 
   # Your top module name must start with "tt_um_". Make it unique by including your github username:
   top_module:  "tt_um_tone_fm_tx"
