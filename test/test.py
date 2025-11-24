@@ -34,24 +34,27 @@ async def test_project(dut):
 
     # Check that playing signal goes high
     # uo_out[2] = playing
-    playing = (dut.uo_out.value >> 2) & 0x1
+    uo_out_val = int(dut.uo_out.value)
+    playing = (uo_out_val >> 2) & 0x1
     dut._log.info(f"Playing status: {playing}")
     assert playing == 1, "Module should be playing"
 
     # Check that we can read note index
     # uo_out[7:4] = note_index[3:0]
-    note_index = (dut.uo_out.value >> 4) & 0xF
+    note_index = (uo_out_val >> 4) & 0xF
     dut._log.info(f"Note index: {note_index}")
 
     # Wait longer and verify the note index advances
     await ClockCycles(dut.clk, 1000)
-    note_index_new = (dut.uo_out.value >> 4) & 0xF
+    uo_out_val = int(dut.uo_out.value)
+    note_index_new = (uo_out_val >> 4) & 0xF
     dut._log.info(f"Note index after wait: {note_index_new}")
 
     # Disable and check that playing stops
     dut.ui_in.value = 0b00000000  # Disable
     await ClockCycles(dut.clk, 10)
-    playing = (dut.uo_out.value >> 2) & 0x1
+    uo_out_val = int(dut.uo_out.value)
+    playing = (uo_out_val >> 2) & 0x1
     dut._log.info(f"Playing status after disable: {playing}")
     assert playing == 0, "Module should not be playing after disable"
 
