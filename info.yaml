@@ -3,7 +3,7 @@ project:
   title:        "Audio Tone Generator & FM Transmitter"
   author:       "Rakesh Peter"
   discord:      ""
-  description:  "FM transmitter with C-major scale tone generation, PWM input, and optional clock doubling"
+  description:  "Simplified FM transmitter with C-major scale tone generation via DDS"
   language:     "Verilog"
   clock_hz:     50000000  # 50 MHz
 
@@ -23,8 +23,6 @@ project:
     - "melody_sequencer.v"
     - "fm_modulator.v"
     - "audio_tone_generator.v"
-    - "clock_doubler.v"
-    - "pwm_input_decoder.v"
 
 # The pinout of your project. Leave unused pins blank. DO NOT delete or add any pins.
 # This section is for the datasheet/website. Use descriptive names (e.g., RX, TX, MOSI, SCL, SEG_A, etc.).
@@ -32,8 +30,8 @@ pinout:
   # Inputs
   ui[0]: "enable"
   ui[1]: "loop"
-  ui[2]: "clk_2x_enable"
-  ui[3]: "pwm_in"
+  ui[2]: ""
+  ui[3]: ""
   ui[4]: ""
   ui[5]: ""
   ui[6]: ""
